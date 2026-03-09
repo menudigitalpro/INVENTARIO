@@ -898,29 +898,35 @@ renderDash();updateBadge();
 
   // ── LOGIN ──
   function checkLogin(){
-    const ok=localStorage.getItem('ip_auth');
-    const ls=document.getElementById('loginScreen');
-    const lo=document.getElementById('logoutBtn');
-    if(ok){
-      if(ls)ls.style.display='none';
-      const u=JSON.parse(ok);
-      if(lo)lo.textContent='🔓 '+u.nombre;
-      const isAdmin=u.rol==='admin';
+    let ok = null;
+    try { ok = JSON.parse(localStorage.getItem('ip_auth')); } catch(e){ localStorage.removeItem('ip_auth'); }
+    const ls = document.getElementById('loginScreen');
+    const lo = document.getElementById('logoutBtn');
+    // Validate session has required fields
+    if(ok && ok.user && ok.rol){
+      if(ls) ls.style.display='none';
+      if(lo) lo.textContent='🔓 '+ok.nombre;
+      const isAdmin = ok.rol==='admin';
       ['sbSecAdmin','sbUsuarios'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=isAdmin?'':'none';});
       const bnU=document.getElementById('bn-usuarios');if(bnU)bnU.style.display=isAdmin?'':'none';
     } else {
-      if(ls)ls.style.display='flex';
+      localStorage.removeItem('ip_auth'); // clear any corrupt session
+      if(ls){ ls.style.display='flex'; setTimeout(()=>document.getElementById('lgUser').focus(),100); }
       ['sbSecAdmin','sbUsuarios'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     }
   }
   function doLogin(){
-    const u=document.getElementById('lgUser').value.trim().toLowerCase();
-    const p=document.getElementById('lgPass').value;
-    const err=document.getElementById('lgErr');
-    const users=getUsers();
-    const match=users.find(x=>x.user===u&&x.pass===p);
+    const uVal = document.getElementById('lgUser').value.trim().toLowerCase();
+    const pVal = document.getElementById('lgPass').value;
+    const err  = document.getElementById('lgErr');
+    if(!uVal || !pVal){ err.textContent='Ingresá usuario y contraseña'; return; }
+    let users;
+    try { users = getUsers(); } catch(e){ err.textContent='Error al leer usuarios'; return; }
+    const match = users.find(x => x.user === uVal && x.pass === pVal);
     if(match){
-      localStorage.setItem('ip_auth',JSON.stringify({id:match.id,user:match.user,nombre:match.nombre,rol:match.rol}));
+      try {
+        localStorage.setItem('ip_auth', JSON.stringify({id:match.id,user:match.user,nombre:match.nombre,rol:match.rol}));
+      } catch(e){ err.textContent='Error al guardar sesión'; return; }
       document.getElementById('loginScreen').style.display='none';
       err.textContent='';
       checkLogin();
@@ -1035,7 +1041,7 @@ renderDash();updateBadge();
     saveUsers(getUsers().filter(x=>x.id!==id));
     renderUsers();toast('Usuario eliminado','red');
   }
-  checkLogin();
+  document.addEventListener('DOMContentLoaded', ()=>{ checkLogin(); });
 
   // ═══════════════════════════════
   //  MODO CAJA
