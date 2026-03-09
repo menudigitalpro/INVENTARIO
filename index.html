@@ -307,6 +307,18 @@ select option{background:var(--s2);}
     <!-- MOVIMIENTOS -->
     <div class="page" id="pg-movimientos">
       <div class="sec-hd"><h2>Historial de Movimientos</h2><button class="btn btn-blue btn-md d-hide" onclick="openMod('mov')">+ Registrar</button></div>
+      <!-- RESUMEN VENDIDO HOY inline -->
+      <div id="mvVendidoHoy" style="margin-bottom:1rem;padding:0.85rem 1.1rem;background:rgba(0,217,126,0.07);border:1px solid rgba(0,217,126,0.18);border-radius:10px;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div style="font-size:1.3rem;">🛒</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:0.72rem;font-weight:700;color:var(--green);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:0.15rem;">Vendido Hoy</div>
+          <div id="mvVdResumen" style="font-size:0.78rem;color:var(--t2);">Cargando…</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--gold);letter-spacing:-0.02em;" id="mvVdIngresos">₡0</div>
+          <div style="font-size:0.62rem;color:var(--t3);">ingresos estimados</div>
+        </div>
+      </div>
       <div class="card" id="movsList"></div>
     </div>
 
@@ -318,6 +330,28 @@ select option{background:var(--s2);}
 
     <!-- REPORTES -->
     <div class="page" id="pg-reportes">
+      <!-- VENDIDO HOY highlight -->
+      <div class="card" style="margin-bottom:1.2rem;border-color:rgba(0,217,126,0.2);background:linear-gradient(135deg,rgba(0,217,126,0.06),rgba(0,217,126,0.02));">
+        <div class="card-hd" style="border-bottom-color:rgba(0,217,126,0.12);">
+          <div class="card-title">🛒 Vendido Hoy</div>
+          <div id="rpVendidoHoyFecha" style="font-size:0.65rem;color:var(--t3);font-family:'JetBrains Mono',monospace;"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid rgba(255,255,255,0.06);" id="rpVendidoStats">
+          <div style="padding:1rem 1.2rem;border-right:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--t3);margin-bottom:0.35rem;">Unidades</div>
+            <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--green);letter-spacing:-0.04em;line-height:1;" id="rpVdUnidades">0</div>
+          </div>
+          <div style="padding:1rem 1.2rem;border-right:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--t3);margin-bottom:0.35rem;">Productos</div>
+            <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--blue);letter-spacing:-0.04em;line-height:1;" id="rpVdProductos">0</div>
+          </div>
+          <div style="padding:1rem 1.2rem;">
+            <div style="font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--t3);margin-bottom:0.35rem;">Ingresos Est.</div>
+            <div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--gold);letter-spacing:-0.03em;line-height:1;word-break:break-all;" id="rpVdIngresos">₡0</div>
+          </div>
+        </div>
+        <div style="padding:0.5rem 0;" id="rpVendidoHoyList"></div>
+      </div>
       <div class="rpt-grid">
         <div class="card"><div class="card-hd"><div class="card-title">📊 Resumen General</div></div><div style="padding:1rem" id="rpRes"></div></div>
         <div class="card"><div class="card-hd"><div class="card-title">🏷️ Por Categoría</div></div><div style="padding:1rem" id="rpCat"></div></div>
@@ -353,8 +387,8 @@ select option{background:var(--s2);}
       <div class="fg"><label>SKU / Código</label><input id="pS" placeholder="CAM-001"/></div>
       <div class="fg"><label>Stock Actual *</label><input type="number" id="pSt" min="0" placeholder="0"/></div>
       <div class="fg"><label>Stock Mínimo</label><input type="number" id="pM" min="0" placeholder="5"/></div>
-      <div class="fg"><label>Precio Costo ($)</label><input type="number" id="pCo" min="0" step="0.01" placeholder="0.00"/></div>
-      <div class="fg"><label>Precio Venta ($)</label><input type="number" id="pVe" min="0" step="0.01" placeholder="0.00"/></div>
+      <div class="fg"><label>Precio Costo (₡)</label><input type="number" id="pCo" min="0" step="0.01" placeholder="0.00"/></div>
+      <div class="fg"><label>Precio Venta (₡)</label><input type="number" id="pVe" min="0" step="0.01" placeholder="0.00"/></div>
       <div class="fg full"><label>Notas</label><input id="pNo" placeholder="Descripción opcional"/></div>
     </div>
     <div class="m-foot">
@@ -536,6 +570,19 @@ function renderMovs(){
   const el=document.getElementById('movsList');
   if(!movs.length){el.innerHTML='<div class="empty"><div class="ei">🔄</div><div class="et">Sin movimientos registrados</div></div>';return;}
   el.innerHTML=movs.slice(0,100).map(m=>{const f=new Date(m.fecha);return`<div class="hr"><div class="hd ${m.tipo==='entrada'?'e':'s'}"></div><div class="hb"><div class="hn">${m.producto}</div><div class="hm">${m.referencia||'Sin ref.'} · Stock antes: ${m.stockAntes}${m.notas?' · '+m.notas:''}</div></div><div class="hri"><div class="hq" style="color:${m.tipo==='entrada'?'var(--green)':'var(--red)'}">${m.tipo==='entrada'?'+':'-'}${m.cantidad}</div><div class="hdate">${f.toLocaleDateString('es')} ${f.toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})}</div></div></div>`;}).join('');
+  // update vendido hoy banner
+  const vd=vendidoHoyData();
+  const mvEl=document.getElementById('mvVdResumen');
+  const mvIn=document.getElementById('mvVdIngresos');
+  if(mvEl){
+    if(!vd.items.length){
+      mvEl.textContent='Ninguna venta registrada hoy aún';
+      mvIn.textContent='₡0';
+    } else {
+      mvEl.textContent=vd.totalUnidades+' unidad'+(vd.totalUnidades===1?'':'es')+' · '+vd.totalProductos+' producto'+(vd.totalProductos===1?'':'s')+' distintos';
+      mvIn.textContent='₡'+vd.totalIngresos.toLocaleString('es-CR');
+    }
+  }
 }
 
 // RENDER ALERTS
@@ -544,6 +591,25 @@ function renderAlerts(){
   const c=prods.filter(p=>p.stock===0),w=prods.filter(p=>p.stock>0&&p.stock<=p.minimo);
   if(!c.length&&!w.length){el.innerHTML='<div class="empty" style="padding:3rem"><div class="ei">✅</div><div class="et">Inventario en orden</div></div>';return;}
   el.innerHTML=[...c.map(p=>`<div class="ar crit"><div class="ar-ic">🔴</div><div class="ar-b"><div class="ar-n">${p.nombre}</div><div class="ar-m">${p.sku} · ${p.categoria} · Mín: ${p.minimo}</div></div><div class="ar-r"><div class="ar-num">0</div><button class="btn btn-green btn-sm" onclick="movFor('${p.id}')">+ Reponer</button></div></div>`),...w.map(p=>`<div class="ar warn"><div class="ar-ic">🟡</div><div class="ar-b"><div class="ar-n">${p.nombre}</div><div class="ar-m">${p.sku} · ${p.categoria} · Mín: ${p.minimo}</div></div><div class="ar-r"><div class="ar-num">${p.stock}</div><button class="btn btn-gold btn-sm" onclick="movFor('${p.id}')">+ Reponer</button></div></div>`)].join('');
+}
+
+// VENDIDO HOY helper
+function vendidoHoyData(){
+  const hoy=new Date().toDateString();
+  const salidas=movs.filter(m=>m.tipo==='salida'&&new Date(m.fecha).toDateString()===hoy);
+  // group by product
+  const mapa={};
+  salidas.forEach(m=>{
+    if(!mapa[m.productoId]){
+      const p=prods.find(x=>x.id===m.productoId)||{nombre:m.producto,venta:0};
+      mapa[m.productoId]={nombre:m.producto,venta:p.venta,cantidad:0};
+    }
+    mapa[m.productoId].cantidad+=m.cantidad;
+  });
+  const items=Object.values(mapa).sort((a,b)=>b.cantidad-a.cantidad);
+  const totalUnidades=items.reduce((s,i)=>s+i.cantidad,0);
+  const totalIngresos=items.reduce((s,i)=>s+i.cantidad*i.venta,0);
+  return{items,totalUnidades,totalProductos:items.length,totalIngresos};
 }
 
 // RENDER REPORTS
@@ -558,7 +624,20 @@ function renderReports(){
   const t5=[...prods].sort((a,b)=>b.stock-a.stock).slice(0,5);
   document.getElementById('rpTop').innerHTML=t5.map((p,i)=>`<div class="rr"><span>${i+1}. ${p.nombre}</span><span class="rv">${p.stock}</span></div>`).join('')||'<div style="padding:1rem;color:var(--t3);font-size:0.8rem">Sin datos</div>';
   const cr=[...prods].sort((a,b)=>a.stock-b.stock).slice(0,5);
-  document.getElementById('rpCrit').innerHTML=cr.map((p,i)=>`<div class="rr"><span>${i+1}. ${p.nombre}</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${p.stock<=p.minimo?'var(--red)':'var(--gold)'}">${p.stock}</span></div>`).join('')||'<div style="padding:1rem;color:var(--t3);font-size:0.8rem">Sin datos</div>';
+    document.getElementById('rpCrit').innerHTML=cr.map((p,i)=>`<div class="rr"><span>${i+1}. ${p.nombre}</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${p.stock<=p.minimo?'var(--red)':'var(--gold)'}">${p.stock}</span></div>`).join('')||'<div style="padding:1rem;color:var(--t3);font-size:0.8rem">Sin datos</div>';
+  // vendido hoy
+  const vd=vendidoHoyData();
+  const hoyStr=new Date().toLocaleDateString('es-CR',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('rpVendidoHoyFecha').textContent=hoyStr;
+  document.getElementById('rpVdUnidades').textContent=vd.totalUnidades;
+  document.getElementById('rpVdProductos').textContent=vd.totalProductos;
+  document.getElementById('rpVdIngresos').textContent='₡'+vd.totalIngresos.toLocaleString('es-CR');
+  const listEl=document.getElementById('rpVendidoHoyList');
+  if(!vd.items.length){
+    listEl.innerHTML='<div class="empty" style="padding:1.5rem"><div class="ei">🛒</div><div class="et">Ninguna salida registrada hoy</div></div>';
+  } else {
+    listEl.innerHTML=vd.items.map(i=>`<div class="hr"><div class="hd s"></div><div class="hb"><div class="hn">${i.nombre}</div><div class="hm">Precio venta: ₡${i.venta.toLocaleString('es-CR')}</div></div><div class="hri"><div class="hq" style="color:var(--red)">-${i.cantidad}</div><div class="hdate">₡${(i.cantidad*i.venta).toLocaleString('es-CR')}</div></div></div>`).join('');
+  }
 }
 
 // BADGE
