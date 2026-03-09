@@ -1092,7 +1092,7 @@ renderDash();updateBadge();
       const agotado = p.stock <= 0;
       const enCart = cart.find(x=>x.prod.id===p.id);
       const low = p.stock > 0 && p.stock <= p.minimo;
-      return `<div class="cp-card ${agotado?'agotado':''}" onclick="${agotado?'toast('Sin stock','red')':'agregarProd(''+p.id+'')'}">
+      return `<div class="cp-card ${agotado?'agotado':''}" onclick="${agotado?'toast(&quot;Sin stock&quot;,&quot;red&quot;)':'agregarProd(&quot;'+p.id+'&quot;)'}">
         ${agotado?'<div class="cp-badge">Agotado</div>':''}
         ${enCart?`<div class="cp-badge" style="background:var(--green-bg);color:var(--green);">×${enCart.cantidad}</div>`:''}
         <div class="cp-em">${p.categoria==='Bebidas'?'🥤':p.categoria==='Lácteos'?'🧀':p.categoria==='Panadería'?'🍞':p.categoria==='Limpieza'?'🧹':p.categoria==='Snacks'?'🍿':'📦'}</div>
